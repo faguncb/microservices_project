@@ -15,6 +15,7 @@ The service provides a basic API to retrieve product information.
 -   Delete products (`DELETE /products/{id}`).
 -   In-memory data store (no database required).
 -   Includes a growing suite of unit tests.
+-   **Data separation**: Product data stored in external `products_data.json` file for easy management.
 
 ---
 
@@ -32,6 +33,15 @@ The service provides a basic API to retrieve product information.
     ```bash
     pip install requests
     ```
+
+### Project Structure
+
+-   `product_service.py` - Main microservice code
+-   `products_data.json` - **Product data file** (separated from code)
+-   `test_product_service.py` - Unit tests
+-   `.gitignore` - Git ignore rules
+-   `.cursorignore` - Cursor AI ignore rules
+-   `CURSOR_GUIDE.md` - **Guide for using Cursor AI safely and preventing unwanted commits**
 
 ---
 
@@ -137,4 +147,74 @@ curl -s -X PATCH http://localhost:8000/products/4 \
 Delete
 ```bash
 curl -s -X DELETE http://localhost:8000/products/4 | jq
+```
+
+---
+
+## Data Management
+
+Product data is now stored in a separate `products_data.json` file. This separation provides several benefits:
+
+-   **Easy data management**: Update product data without touching code
+-   **Better organization**: Clear separation of concerns
+-   **Version control**: Can track data changes separately from code changes
+
+### Editing Product Data
+
+To modify the initial product list, edit `products_data.json`:
+
+```json
+{
+    "1": {"name": "Laptop", "price": 1200},
+    "2": {"name": "Mouse", "price": 25},
+    "3": {"name": "Keyboard", "price": 75}
+}
+```
+
+**Note**: The service loads data on startup. Restart the service after modifying `products_data.json`.
+
+---
+
+## Cursor AI and Git Integration
+
+### Preventing Unwanted Commits
+
+**📖 For detailed guidance, see [CURSOR_GUIDE.md](CURSOR_GUIDE.md)**
+
+This project includes:
+
+1.  **`.gitignore`** - Prevents Python cache files, virtual environments, and IDE files from being committed
+2.  **`.cursorignore`** - Tells Cursor AI to ignore certain files during analysis
+3.  **`CURSOR_GUIDE.md`** - Comprehensive guide for using Cursor AI safely
+
+### Quick Best Practices
+
+To prevent Cursor AI from automatically committing code:
+
+1.  **Review changes before committing**: Always review the diff manually
+2.  **Use manual git commands**: Instead of relying on AI, use:
+    ```bash
+    git status
+    git add <specific-files>
+    git commit -m "Your message"
+    git push
+    ```
+3.  **Cursor Settings**: In Cursor, go to Settings → Features → disable "Auto-commit" if enabled
+4.  **Use `.cursorignore`**: Add patterns for files you don't want Cursor to modify or analyze
+
+### Git Workflow
+
+```bash
+# Check what's changed
+git status
+
+# Add specific files only
+git add product_service.py
+git add products_data.json
+
+# Commit with a meaningful message
+git commit -m "Separate product data into JSON file"
+
+# Push to remote
+git push origin main
 ```
