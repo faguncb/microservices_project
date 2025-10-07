@@ -6,19 +6,20 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 
-# This is our in-memory "database" of products.
-# In a real application, this would come from a database like PostgreSQL or MongoDB.
+# Key: In-memory data store
+# In real apps, this would be a real database (e.g., Postgres/Mongo).
 products = {
     "1": {"name": "Laptop", "price": 1200},
     "2": {"name": "Mouse", "price": 25},
     "3": {"name": "Keyboard", "price": 75},
 }
 
-# This class will handle all incoming requests to our server.
+# Key: HTTP request handler – maps HTTP methods to Python methods
 class ProductServiceHandler(BaseHTTPRequestHandler):
     
     def _send_response(self, status_code, data):
         """Helper function to send a JSON response."""
+        # Key: Central place to set status, headers, and write JSON body
         self.send_response(status_code)
         self.send_header('Content-type', 'application/json')
         self.end_headers()
@@ -30,6 +31,7 @@ class ProductServiceHandler(BaseHTTPRequestHandler):
         print(f"Received GET request for path: {self.path}")
 
         # Endpoint 1: Get all products
+        # Key: Simple router via path checks
         # If the path is '/products', return the whole list.
         if self.path == '/products':
             self._send_response(200, list(products.values()))
@@ -60,6 +62,7 @@ class ProductServiceHandler(BaseHTTPRequestHandler):
     # A request handler for POST requests.
     def do_POST(self):
         """Handles POST requests to create a new product."""
+        # Key: Create – validate input, assign new ID, return 201
         print(f"Received POST request for path: {self.path}")
 
         if self.path == '/products':
@@ -106,6 +109,7 @@ class ProductServiceHandler(BaseHTTPRequestHandler):
             self._send_response(404, error_message)
 
     def _read_json_body(self):
+        # Key: Safely read and parse JSON from request body
         content_length_header = self.headers.get('Content-Length', '0')
         content_length = int(content_length_header) if content_length_header.isdigit() else 0
         raw_body = self.rfile.read(content_length) if content_length > 0 else b''
@@ -116,6 +120,7 @@ class ProductServiceHandler(BaseHTTPRequestHandler):
 
     def do_PUT(self):
         """Handles PUT requests to fully update an existing product."""
+        # Key: Full update – requires both name and price
         print(f"Received PUT request for path: {self.path}")
         if self.path.startswith('/products/'):
             product_id = self.path.split('/')[-1]
@@ -147,6 +152,7 @@ class ProductServiceHandler(BaseHTTPRequestHandler):
 
     def do_PATCH(self):
         """Handles PATCH requests to partially update an existing product."""
+        # Key: Partial update – validates only provided fields
         print(f"Received PATCH request for path: {self.path}")
         if self.path.startswith('/products/'):
             product_id = self.path.split('/')[-1]
@@ -181,6 +187,7 @@ class ProductServiceHandler(BaseHTTPRequestHandler):
 
     def do_DELETE(self):
         """Handles DELETE requests to remove an existing product."""
+        # Key: Delete – returns deleted resource or 404 if not found
         print(f"Received DELETE request for path: {self.path}")
         if self.path.startswith('/products/'):
             product_id = self.path.split('/')[-1]
@@ -196,6 +203,7 @@ class ProductServiceHandler(BaseHTTPRequestHandler):
 
 def run(server_class=HTTPServer, handler_class=ProductServiceHandler, port=8000):
     """Starts the HTTP server."""
+    # Key: Server bootstrap – binds to port and serves forever
     server_address = ('', port)
     httpd = server_class(server_address, handler_class)
     print(f"Starting Product Microservice on port {port}...")
@@ -204,4 +212,5 @@ def run(server_class=HTTPServer, handler_class=ProductServiceHandler, port=8000)
 # This is the entry point of our script.
 # When you run 'python product_service.py', this part will execute.
 if __name__ == '__main__':
+    # Key: Entry point – run with `python product_service.py`
     run()
