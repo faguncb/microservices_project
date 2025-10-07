@@ -57,6 +57,143 @@ class ProductServiceHandler(BaseHTTPRequestHandler):
             error_message = {"error": "Endpoint not found"}
             self._send_response(404, error_message)
 
+    # A request handler for POST requests.
+    def do_POST(self):
+        """Handles POST requests to create a new product."""
+        print(f"Received POST request for path: {self.path}")
+
+        if self.path == '/products':
+            try:
+                content_length_header = self.headers.get('Content-Length', '0')
+                content_length = int(content_length_header) if content_length_header.isdigit() else 0
+                raw_body = self.rfile.read(content_length) if content_length > 0 else b''
+
+                # Parse JSON body
+                try:
+                    payload = json.loads(raw_body.decode('utf-8') or '{}')
+                except json.JSONDecodeError:
+                    self._send_response(400, {"error": "Invalid JSON payload"})
+                    return
+
+                name = payload.get('name')
+                price = payload.get('price')
+
+                # Basic validation
+                if not isinstance(name, str) or not name.strip():
+                    self._send_response(400, {"error": "Field 'name' is required and must be a non-empty string"})
+                    return
+                if not (isinstance(price, int) or isinstance(price, float)) or price < 0:
+                    self._send_response(400, {"error": "Field 'price' is required and must be a non-negative number"})
+                    return
+
+                # Generate new ID
+                if products:
+                    max_id = max(int(pid) for pid in products.keys())
+                    new_id = str(max_id + 1)
+                else:
+                    new_id = '1'
+
+                # Store the new product
+                products[new_id] = {"name": name.strip(), "price": price}
+
+                # Respond with created resource
+                created = {"id": new_id, "name": products[new_id]["name"], "price": products[new_id]["price"]}
+                self._send_response(201, created)
+            except Exception as e:
+                self._send_response(500, {"error": f"Internal server error: {e}"})
+        else:
+            error_message = {"error": "Endpoint not found"}
+            self._send_response(404, error_message)
+
+    def _read_json_body(self):
+        content_length_header = self.headers.get('Content-Length', '0')
+        content_length = int(content_length_header) if content_length_header.isdigit() else 0
+        raw_body = self.rfile.read(content_length) if content_length > 0 else b''
+        try:
+            return json.loads(raw_body.decode('utf-8') or '{}'), None
+        except json.JSONDecodeError:
+            return None, {"error": "Invalid JSON payload"}
+
+    def do_PUT(self):
+        """Handles PUT requests to fully update an existing product."""
+        print(f"Received PUT request for path: {self.path}")
+        if self.path.startswith('/products/'):
+            product_id = self.path.split('/')[-1]
+            if product_id not in products:
+                self._send_response(404, {"error": "Product not found"})
+                return
+
+            payload, error = self._read_json_body()
+            if error is not None:
+                self._send_response(400, error)
+                return
+
+            name = payload.get('name')
+            price = payload.get('price')
+
+            # PUT requires both fields
+            if not isinstance(name, str) or not name.strip():
+                self._send_response(400, {"error": "Field 'name' is required and must be a non-empty string"})
+                return
+            if not (isinstance(price, int) or isinstance(price, float)) or price < 0:
+                self._send_response(400, {"error": "Field 'price' is required and must be a non-negative number"})
+                return
+
+            products[product_id] = {"name": name.strip(), "price": price}
+            updated = {"id": product_id, "name": products[product_id]["name"], "price": products[product_id]["price"]}
+            self._send_response(200, updated)
+        else:
+            self._send_response(404, {"error": "Endpoint not found"})
+
+    def do_PATCH(self):
+        """Handles PATCH requests to partially update an existing product."""
+        print(f"Received PATCH request for path: {self.path}")
+        if self.path.startswith('/products/'):
+            product_id = self.path.split('/')[-1]
+            if product_id not in products:
+                self._send_response(404, {"error": "Product not found"})
+                return
+
+            payload, error = self._read_json_body()
+            if error is not None:
+                self._send_response(400, error)
+                return
+
+            # Validate provided fields only
+            if 'name' in payload:
+                name = payload.get('name')
+                if not isinstance(name, str) or not name.strip():
+                    self._send_response(400, {"error": "Field 'name' is required and must be a non-empty string"})
+                    return
+                products[product_id]["name"] = name.strip()
+
+            if 'price' in payload:
+                price = payload.get('price')
+                if not (isinstance(price, int) or isinstance(price, float)) or price < 0:
+                    self._send_response(400, {"error": "Field 'price' is required and must be a non-negative number"})
+                    return
+                products[product_id]["price"] = price
+
+            updated = {"id": product_id, "name": products[product_id]["name"], "price": products[product_id]["price"]}
+            self._send_response(200, updated)
+        else:
+            self._send_response(404, {"error": "Endpoint not found"})
+
+    def do_DELETE(self):
+        """Handles DELETE requests to remove an existing product."""
+        print(f"Received DELETE request for path: {self.path}")
+        if self.path.startswith('/products/'):
+            product_id = self.path.split('/')[-1]
+            if product_id not in products:
+                self._send_response(404, {"error": "Product not found"})
+                return
+
+            deleted = {"id": product_id, "name": products[product_id]["name"], "price": products[product_id]["price"]}
+            del products[product_id]
+            self._send_response(200, deleted)
+        else:
+            self._send_response(404, {"error": "Endpoint not found"})
+
 def run(server_class=HTTPServer, handler_class=ProductServiceHandler, port=8000):
     """Starts the HTTP server."""
     server_address = ('', port)
