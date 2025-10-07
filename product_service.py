@@ -5,14 +5,25 @@
 # and 'json' to format our data to be sent over the web.
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
+import os
 
 # Key: In-memory data store
 # In real apps, this would be a real database (e.g., Postgres/Mongo).
-products = {
-    "1": {"name": "Laptop", "price": 1200},
-    "2": {"name": "Mouse", "price": 25},
-    "3": {"name": "Keyboard", "price": 75},
-}
+# Load initial products data from external JSON file
+def load_products():
+    """Load products from the JSON data file."""
+    data_file = os.path.join(os.path.dirname(__file__), 'products_data.json')
+    try:
+        with open(data_file, 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        print(f"Warning: {data_file} not found. Starting with empty product list.")
+        return {}
+    except json.JSONDecodeError:
+        print(f"Warning: {data_file} contains invalid JSON. Starting with empty product list.")
+        return {}
+
+products = load_products()
 
 # Key: HTTP request handler – maps HTTP methods to Python methods
 class ProductServiceHandler(BaseHTTPRequestHandler):
