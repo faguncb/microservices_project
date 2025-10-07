@@ -57,6 +57,28 @@ To validate that the service is working correctly, you can run the included test
     python -m unittest test_product_service.py
     ```
 
+Inline notes for running tests concurrently with the server
+- Option A (two terminals):
+  - Terminal 1: start the server
+    ```bash
+    python product_service.py
+    ```
+  - Terminal 2: run tests
+    ```bash
+    python -m unittest test_product_service.py
+    ```
+- Option B (single terminal, background server):
+  - Start the server in the background, then run tests
+    ```bash
+    python product_service.py &
+    sleep 1 && python -m unittest test_product_service.py
+    ```
+  - Stop the background server on macOS/Linux
+    ```bash
+    lsof -ti tcp:8000 | xargs -r kill -9
+    ```
+
+
 ---
 
 ## API Endpoints
