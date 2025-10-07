@@ -1,0 +1,17 @@
+# This file tells Cursor to ignore certain files/directories
+# Similar to .gitignore but specific to Cursor AI
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+
+# Ignore environment files
+.env
+.venv/
+venv/
+
+# Ignore build artifacts
+build/
+dist/
+*.egg-info/
+
